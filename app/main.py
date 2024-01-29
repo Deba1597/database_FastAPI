@@ -5,7 +5,6 @@ from .routers import post,user,auth,vote
 from pydantic import BaseSettings
 from .config import settings
 
-print(settings.secret_key)
 
 models.Base.metadata.create_all(bind=engine)
 

@@ -9,17 +9,18 @@ router = APIRouter(
     tags=['Posts']
     )
 
-@router.get('/',response_model=List[schema.Post])
+# @router.get('/',response_model=List[schema.Post])
+@router.get('/',response_model=List[schema.PostOut])
 def get_posts(db: Session = Depends(get_db),
               current_user :int=Depends(oauth2.get_current_user),
               limit:int=10, skip:int=0, search:Optional[str]=""):
-    print(limit)
-    print(current_user.email)
-    posts = db.query(models.Post).filter(
+
+    # posts = db.query(models.Post).filter(
+    #     models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    posts = db.query(models.Post,func.count(models.Vote.post_id).label('votes')).join(
+        models.Vote,models.Vote.post_id == models.Post.id,isouter=True).group_by(models.Post.id).filter(
         models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    results = db.query(models.Post,func.count(models.Vote.post_id).label('votes')).join(
-        models.Vote,models.Vote.post_id == models.Post.id,isouter=True).group_by(models.Post.id)
-    print(results)
+    
     return posts
 
 
@@ -35,11 +36,15 @@ def create_post(post:schema.PostCreate,db: Session = Depends(get_db),
     return new_post
 
 
-@router.get('/{id}',response_model=schema.Post)
+@router.get('/{id}',response_model=schema.PostOut)
 def get_post(id:int,db: Session = Depends(get_db),
              current_user :int=Depends(oauth2.get_current_user)):
     print(current_user.email)
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    # post = db.query(models.Post).filter(models.Post.id == id).first()
+
+    post = db.query(models.Post,func.count(models.Vote.post_id).label('votes')).join(
+        models.Vote,models.Vote.post_id == models.Post.id,isouter=True).group_by(models.Post.id).filter(
+            models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id {id} was not found")
