@@ -1,4 +1,2 @@
-app/__pycache__/
-app/routers/__pycache__/
 apienv/
 .env
