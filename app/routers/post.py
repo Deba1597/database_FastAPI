@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import engine,get_db
 from typing import List,Optional
 from sqlalchemy import func
+
 router = APIRouter(
     prefix="/posts",
     tags=['Posts']
@@ -27,8 +28,7 @@ def get_posts(db: Session = Depends(get_db),
 @router.post('/',status_code=status.HTTP_201_CREATED,response_model=schema.Post)
 def create_post(post:schema.PostCreate,db: Session = Depends(get_db),
                 current_user :int=Depends(oauth2.get_current_user)):
-    print(current_user.email) 
-    print(current_user.id)
+    
     new_post = models.Post(owner_id = current_user.id, **post.dict())
     db.add(new_post)
     db.commit()
@@ -39,7 +39,6 @@ def create_post(post:schema.PostCreate,db: Session = Depends(get_db),
 @router.get('/{id}',response_model=schema.PostOut)
 def get_post(id:int,db: Session = Depends(get_db),
              current_user :int=Depends(oauth2.get_current_user)):
-    print(current_user.email)
     # post = db.query(models.Post).filter(models.Post.id == id).first()
 
     post = db.query(models.Post,func.count(models.Vote.post_id).label('votes')).join(
